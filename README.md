@@ -16,7 +16,31 @@ Built against policy document **KMP-OHS-POL-001** — *Occupational Health & Saf
 
 
 
-## 📸 System Screenshots
+## 🎬 Live System Demonstration
+
+### Computer Vision Pipeline in Action
+[Detailed Demo Video](media/detailed_demo_video.mp4)
+*Annotated frame-by-frame processing demonstrating real-time bounding box tracking, behavior classification, and confidence scoring directly over raw factory footage.*
+
+---
+
+## 📸 Automated Test Cases Showcase
+
+The pipeline rigorously classifies various safety violations and highlights them immediately with visual overlays. Below are live test case captures from the classification engine:
+
+| **Forklift Overload Violation** | **Unsecured Electrical Panel** |
+|:---:|:---:|
+| ![Forklift Overload](media/testcases/testcase_carrying_overload_with_forklift.png) | ![Opened Panel](media/testcases/testcase_opened_panel_cover.png) |
+| *Identifies forklifts carrying 3+ load blocks simultaneously* | *Detects unlatched electrical cabinets and panels* |
+
+| **Pedestrian Walkway Intrusion** |
+|:---:|
+| ![Walkway Violation](media/testcases/testcase_safe_walkway_violation.png) |
+| *Flags personnel operating outside of designated green safety perimeters* |
+
+---
+
+## 💻 Dashboard UI Screenshots
 
 | **Dashboard Live Monitor & Heatmap** | **Dynamic Rule Configurations** |
 |:---:|:---:|
