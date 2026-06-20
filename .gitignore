@@ -61,4 +61,7 @@ data/*.webm
 *.log
 
 dataset_real/
+!media/detailed_demo_video.mp4
+!media/demo/
+!media/demo/*.mp4
 media/*.mp4
