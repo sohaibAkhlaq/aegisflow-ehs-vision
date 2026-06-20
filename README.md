@@ -19,7 +19,7 @@ Built against policy document **KMP-OHS-POL-001** — *Occupational Health & Saf
 ## 🎬 Live System Demonstration
 
 ### Computer Vision Pipeline in Action
-[Detailed Demo Video](media/detailed_demo_video.mp4)
+
 *Annotated frame-by-frame processing demonstrating real-time bounding box tracking, behavior classification, and confidence scoring directly over raw factory footage.*
 
 ---
