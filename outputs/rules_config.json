@@ -1,0 +1,22 @@
+{
+  "0": {
+    "active": true,
+    "confidence_threshold": 0.65,
+    "severity": "CRITICAL"
+  },
+  "1": {
+    "active": true,
+    "confidence_threshold": 0.45,
+    "severity": "HIGH"
+  },
+  "2": {
+    "active": true,
+    "confidence_threshold": 0.45,
+    "severity": "LOW"
+  },
+  "3": {
+    "active": true,
+    "confidence_threshold": 0.45,
+    "severity": "HIGH"
+  }
+}

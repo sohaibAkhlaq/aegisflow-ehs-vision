@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  aegisflow-ehs:
+    build: .
+    container_name: aegisflow-ehs-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    restart: unless-stopped

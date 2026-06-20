@@ -1,0 +1,64 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.so
+
+# ── Virtual Environment ───────────────────────────────────────────────────────
+.venv/
+venv/
+ENV/
+env/
+.env
+!.env.example
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Distribution / Build ──────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ── Database & Outputs ────────────────────────────────────────────────────────
+outputs/compliance.db
+outputs/audit_log.csv
+outputs/audit_log.json
+
+# ── YOLO model weights ────────────────────────────────────────────────────────
+*.pt
+*.onnx
+*.engine
+runs/
+
+# ── Video data (large files — add manually via Git LFS if needed) ─────────────
+data/*.mp4
+data/*.avi
+data/*.mov
+data/*.mkv
+data/*.webm
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+
+dataset_real/
+media/*.mp4

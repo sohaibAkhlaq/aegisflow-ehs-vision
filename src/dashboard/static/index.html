@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AegisFlow EHS Vision Platform -- KMP-OHS-POL-001 real-time compliance dashboard" />
+  <title>AegisFlow | EHS Compliance Vision Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- CRITICAL ALERT OVERLAY -->
+  <div id="alert-overlay" class="alert-overlay hidden">
+    <div class="alert-strobe"></div>
+    <div class="alert-modal">
+      <div class="alert-modal-header">
+        <span class="alert-icon">⚠</span>
+        <span id="alert-severity-label" class="alert-severity-badge">CRITICAL</span>
+      </div>
+      <h2 id="alert-title" class="alert-title">Compliance Violation Detected</h2>
+      <p id="alert-body" class="alert-body">Loading details...</p>
+      <div class="alert-meta">
+        <span id="alert-zone" class="alert-meta-item"></span>
+        <span id="alert-policy" class="alert-meta-item"></span>
+        <span id="alert-conf" class="alert-meta-item"></span>
+      </div>
+      <img id="alert-thumb" class="alert-thumb hidden" src="" alt="Violation frame" />
+      <button id="alert-dismiss" class="btn-dismiss" onclick="dismissAlert()">Acknowledge &amp; Dismiss</button>
+    </div>
+  </div>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="topnav-brand">
+      <div class="brand-icon">⬡</div>
+      <div class="brand-text">
+        <span class="brand-name">AegisFlow</span>
+        <span class="brand-sub">EHS Compliance Platform</span>
+      </div>
+    </div>
+    
+    <!-- Navigation Tabs (Feature 1 Nav) -->
+    <div class="topnav-navigation">
+      <button class="nav-tab active" id="tab-dashboard" onclick="switchTab('dashboard')">📊 Main Console</button>
+      <button class="nav-tab" id="tab-settings" onclick="switchTab('settings')">⚙ Policy Rules Settings</button>
+    </div>
+
+    <div class="topnav-status">
+      <div id="ws-indicator" class="ws-dot disconnected" title="WebSocket status"></div>
+      <span id="ws-label" class="ws-label">Connecting…</span>
+      <span class="policy-badge">KMP-OHS-POL-001</span>
+    </div>
+    <div class="topnav-actions">
+      <button class="btn-process" id="btn-demo" onclick="loadDemo()">⚡ Load Demo</button>
+      <button class="btn-process" id="btn-process" onclick="triggerProcessing()">▶ Analyse Clips</button>
+    </div>
+  </nav>
+
+  <!-- VIEW 1: MAIN DASHBOARD TAB -->
+  <div id="view-dashboard">
+    <!-- STAT CARDS -->
+    <section class="stats-bar" id="stats-bar">
+      <div class="stat-card" id="stat-total">
+        <div class="stat-value" id="s-total">—</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="stat-card critical" id="stat-critical">
+        <div class="stat-value" id="s-critical">—</div>
+        <div class="stat-label">Critical</div>
+      </div>
+      <div class="stat-card high" id="stat-high">
+        <div class="stat-value" id="s-high">—</div>
+        <div class="stat-label">High</div>
+      </div>
+      <div class="stat-card medium" id="stat-medium">
+        <div class="stat-value" id="s-medium">—</div>
+        <div class="stat-label">Medium</div>
+      </div>
+      <div class="stat-card low" id="stat-low">
+        <div class="stat-value" id="s-low">—</div>
+        <div class="stat-label">Low</div>
+      </div>
+      <div class="stat-card alerts" id="stat-alerts">
+        <div class="stat-value" id="s-alerts">—</div>
+        <div class="stat-label">Safety Indices</div>
+      </div>
+    </section>
+
+    <!-- MAIN GRID -->
+    <main class="main-grid">
+
+      <!-- VIEW A: LIVE FEED MONITOR -->
+      <section class="panel panel-feed" id="panel-feed">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon">📹</span>
+            <span>Live Feed Monitor</span>
+            <span class="view-badge">View A</span>
+          </div>
+          <div class="feed-status" id="feed-status">
+            <span class="pulse-dot"></span>
+            <span id="feed-status-text">Monitoring</span>
+          </div>
+        </div>
+        <div class="feed-container" id="feed-container">
+          <div class="feed-placeholder" id="feed-placeholder">
+            <div class="feed-placeholder-icon">📷</div>
+            <p>No clip loaded — drop a video into <code>data/</code> and click <strong>Analyse Clips</strong>,<br>or click <strong>Load Demo</strong> to see the system in action.</p>
+          </div>
+          <img id="feed-thumb" class="feed-thumb hidden" src="" alt="Latest frame" />
+          <div id="feed-overlay" class="feed-overlay hidden">
+            <div id="feed-badge" class="feed-badge">COMPLIANT</div>
+            <div id="feed-violation-name" class="feed-violation-name"></div>
+          </div>
+        </div>
+
+        <!-- FACILITY MAP GRID (Feature 2) -->
+        <div class="facility-map-container">
+          <div class="facility-map-title">Facility Floor Status Heatmap - Real-Time Zones</div>
+          <div class="facility-grid" id="facility-grid">
+            <div class="zone-cell" id="zone-Top-Left" data-zone="Zone-Top-Left">ZONE A<br><span class="zone-label">Top-Left</span></div>
+            <div class="zone-cell" id="zone-Top-Center" data-zone="Zone-Top-Center">ZONE B<br><span class="zone-label">Top-Center</span></div>
+            <div class="zone-cell" id="zone-Top-Right" data-zone="Zone-Top-Right">ZONE C<br><span class="zone-label">Top-Right</span></div>
+            <div class="zone-cell" id="zone-Mid-Left" data-zone="Zone-Mid-Left">ZONE D<br><span class="zone-label">Mid-Left</span></div>
+            <div class="zone-cell" id="zone-Mid-Center" data-zone="Zone-Mid-Center">ZONE E<br><span class="zone-label">Mid-Center</span></div>
+            <div class="zone-cell" id="zone-Mid-Right" data-zone="Zone-Mid-Right">ZONE F<br><span class="zone-label">Mid-Right</span></div>
+            <div class="zone-cell" id="zone-Bottom-Left" data-zone="Zone-Bottom-Left">ZONE G<br><span class="zone-label">Bottom-Left</span></div>
+            <div class="zone-cell" id="zone-Bottom-Center" data-zone="Zone-Bottom-Center">ZONE H<br><span class="zone-label">Bottom-Center</span></div>
+            <div class="zone-cell" id="zone-Bottom-Right" data-zone="Zone-Bottom-Right">ZONE I<br><span class="zone-label">Bottom-Right</span></div>
+          </div>
+        </div>
+
+        <div class="feed-info" id="feed-info">
+          <div class="feed-info-row">
+            <span class="info-label">Last Event</span>
+            <span id="fi-time" class="info-value">—</span>
+          </div>
+          <div class="feed-info-row">
+            <span class="info-label">Clip</span>
+            <span id="fi-clip" class="info-value">—</span>
+          </div>
+          <div class="feed-info-row">
+            <span class="info-label">Zone</span>
+            <span id="fi-zone" class="info-value">—</span>
+          </div>
+          <div class="feed-info-row">
+            <span class="info-label">Confidence</span>
+            <span id="fi-conf" class="info-value">—</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW B: ALERT TIMELINE -->
+      <section class="panel panel-timeline" id="panel-timeline">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon">⚡</span>
+            <span>Alert Timeline Stream</span>
+            <span class="view-badge">View B</span>
+          </div>
+          <button class="btn-clear" onclick="clearTimeline()">Clear</button>
+        </div>
+        <div class="timeline-filters">
+          <select id="tf-severity" class="filter-select" onchange="filterTimeline()">
+            <option value="">All Severities</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
+          </select>
+          <select id="tf-class" class="filter-select" onchange="filterTimeline()">
+            <option value="">All Classes</option>
+            <option value="0">Walkway Violation</option>
+            <option value="1">Unauthorized Intervention</option>
+            <option value="2">Open Panel Cover</option>
+            <option value="3">Forklift Overload</option>
+          </select>
+        </div>
+        <div class="timeline-stream" id="timeline-stream">
+          <div class="timeline-empty" id="timeline-empty">
+            <p>Waiting for events…</p>
+            <p class="muted">Violations will appear here in real time</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- VIEW C: HISTORICAL LOG & EXPORT -->
+    <section class="panel panel-log" id="panel-log">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-icon">📋</span>
+          <span>Historical Compliance Log</span>
+          <span class="view-badge">View C</span>
+        </div>
+        <div class="log-actions">
+          <button class="btn-export" onclick="exportData('csv')" id="btn-csv">⬇ CSV</button>
+          <button class="btn-export" onclick="exportData('json')" id="btn-json">⬇ JSON</button>
+          <button class="btn-print" onclick="window.print()" id="btn-print">🖨 Print Executive PDF</button>
+          <button class="btn-refresh" onclick="loadEvents()" id="btn-refresh">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="log-filters">
+        <div class="filter-group">
+          <label class="filter-label">Severity</label>
+          <select id="lf-severity" class="filter-select" onchange="loadEvents()">
+            <option value="">All</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Behavior Class</label>
+          <select id="lf-class" class="filter-select" onchange="loadEvents()">
+            <option value="">All Classes</option>
+            <option value="0">Walkway Violation</option>
+            <option value="1">Unauthorized Intervention</option>
+            <option value="2">Open Panel Cover</option>
+            <option value="3">Forklift Overload</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Date From</label>
+          <input type="date" id="lf-from" class="filter-input" onchange="loadEvents()" />
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Date To</label>
+          <input type="date" id="lf-to" class="filter-input" onchange="loadEvents()" />
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Per Page</label>
+          <select id="lf-limit" class="filter-select" onchange="loadEvents()">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="log-table-wrapper">
+        <table class="log-table" id="log-table">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Timestamp</th>
+              <th>Behavior</th>
+              <th>Clip ID</th>
+              <th>Zone</th>
+              <th>Policy Ref</th>
+              <th>Confidence</th>
+              <th>Alert</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody">
+            <tr><td colspan="9" class="table-empty">Loading records…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="log-pagination" id="log-pagination"></div>
+    </section>
+  </div>
+
+  <!-- VIEW 2: POLICY SETTINGS CONFIG TAB (Feature 1 Panel) -->
+  <div id="view-settings" class="hidden">
+    <section class="panel panel-settings">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-icon">⚙</span>
+          <span>EHS Policy Rules & Dynamic Parameters Manager</span>
+          <span class="view-badge">Control Center</span>
+        </div>
+        <div class="settings-actions">
+          <button class="btn-save" onclick="savePolicySettings()">💾 Save Configurations</button>
+          <button class="btn-reset" onclick="loadPolicySettings()">↻ Reset</button>
+        </div>
+      </div>
+      <div class="settings-body">
+        <p class="settings-intro">
+          Configure rule states, custom detection confidence thresholds, and risk severity overrides. 
+          Adjustments are applied in real time to both primary computer vision algorithms (YOLOv8 heuristics) and downstream alert routers.
+        </p>
+        <div class="rules-grid" id="rules-settings-grid">
+          <div class="settings-loading">Loading EHS policy rules registry...</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- EVENT DETAIL MODAL -->
+  <div id="detail-modal" class="detail-modal hidden">
+    <div class="detail-backdrop" onclick="closeDetail()"></div>
+    <div class="detail-content">
+      <div class="detail-header">
+        <h3 id="dm-title">Event Detail</h3>
+        <button class="btn-close" onclick="closeDetail()">✕</button>
+      </div>
+      <div class="detail-body" id="detail-body"></div>
+    </div>
+  </div>
+
+  <!-- PROCESSING TOAST -->
+  <div id="toast" class="toast hidden">
+    <span id="toast-msg"></span>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
