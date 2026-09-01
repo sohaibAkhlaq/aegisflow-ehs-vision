@@ -216,15 +216,39 @@ python scripts/calibrate_regions.py                         # walkway polygon co
 python scripts/evaluate.py --split test --per-class 12
 ```
 
-## With a provider configured
+## Results — Groq provider, test split, 87 clips
 
-Not yet measured — no API key was available during the build. The expected gain is
-concentrated in the three classes whose classical cues fail, and the harness is ready:
+Same clips, same commissioning artefacts, same thresholds. The only change is that the VLM
+becomes available as a detection path, so ambiguous frames get read instead of abstained on.
 
 ```bash
-AEGISFLOW_LLM_PROVIDER=groq GROQ_API_KEY=gsk_... \
-  python scripts/evaluate.py --split test --per-class 12 --json outputs/eval/groq.json
+AEGISFLOW_LLM_PROVIDER=groq GROQ_API_KEY=... \
+  python scripts/evaluate.py --split test --per-class 12 --json outputs/eval/groq_final.json
 ```
 
-Record the result in the table above rather than replacing the offline row — both numbers are
-worth having, because offline is what runs when the network is down.
+| Behaviour | Positives | TP | FP | FN | Precision | Recall | F1 | vs. offline |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Opened Panel Cover | 12 | 8 | 10 | 4 | 0.44 | 0.67 | **0.53** | — |
+| Safe Walkway Violation | 12 | 7 | 12 | 5 | 0.37 | 0.58 | **0.45** | +0.08 |
+| Carrying Overload with Forklift | 8 | 2 | 0 | 6 | 1.00 | 0.25 | **0.40** | +0.40 |
+| Unauthorized Intervention | 11 | 1 | 9 | 10 | 0.10 | 0.09 | **0.10** | −0.04 |
+| **Macro average** | | | **31** | | | | **0.37** | **+0.11** |
+
+**Macro F1 rises from 0.26 to 0.37** — a 43% relative gain, at the cost of 261 VLM calls and
+~47% more wall-clock (7.9 s/clip vs 5.4 s). Read it per class, because the average hides the
+interesting part:
+
+- **Forklift overload goes from 0.00 to 0.40, at precision 1.00.** This is the whole argument
+  for the VLM path. The contour cue was measured anti-correlated and is disabled offline
+  (ADR 0003), so the class scores exactly zero without a provider. The VLM recovers 2 of 8
+  positives and — importantly — fires on nothing else. It abstains rather than guesses.
+- **Walkway improves modestly** (0.37 → 0.45): +2 TP for +2 FP.
+- **Unauthorized intervention gets slightly worse** (0.13 → 0.10). The VLM trades 2 FP for
+  6 more, without recovering a single extra positive. The vest cue is the weakest detector
+  either way and the VLM does not rescue it.
+
+So the honest summary is: the provider path is worth having for one class, neutral-to-helpful
+for a second, and mildly harmful for a third. It is not a general uplift.
+
+Both numbers are kept rather than one replacing the other, because offline is what runs when
+the network is down.

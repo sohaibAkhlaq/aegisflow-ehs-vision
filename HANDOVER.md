@@ -21,6 +21,7 @@
 | Code quality | `ruff` and `black` clean | `ruff check src tests scripts` |
 | Docs | README, CONTEXT, architecture, API contract, 3 ADRs, evaluation baseline | `docs/` |
 | Commissioning | Camera registry, panel baseline, walkway polygons all calibrated | `artifacts/models/` |
+| Evaluation | Both providers measured on the test split: macro F1 **0.26** offline, **0.37** with Groq | `docs/eval-baseline.md` |
 
 ### Left — yours
 
@@ -189,7 +190,7 @@ a container healthcheck.
 
 | # | Task | Notes |
 |---|---|---|
-| D1 | Add **your own** `GROQ_API_KEY` to `.env`, run `info --check-llm`, re-run the evaluation | Section 4. Record the numbers in `docs/eval-baseline.md`. |
+| D1 | Add **your own** `GROQ_API_KEY` to `.env`, run `info --check-llm`, re-run the evaluation | Section 4. A Groq baseline is already recorded in `docs/eval-baseline.md` (macro F1 0.37 vs 0.26 offline); confirm you reproduce it on your key and models, and update the table if the numbers move. |
 | D2 | Dockerfile + compose | Single service. Mount `data/`, `outputs/`, `artifacts/` and the SQLite file as volumes. `python -m aegisflow serve --host 0.0.0.0`. |
 | D3 | Run the full dataset once and seed the demo database | `aegisflow run --split test --annotate` |
 | D4 | Record the demo video | Section 8 has a suggested script. |

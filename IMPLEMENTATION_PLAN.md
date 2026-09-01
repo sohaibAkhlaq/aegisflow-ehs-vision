@@ -410,7 +410,7 @@ see `HANDOVER.md`.
 | S4.3 Safe walkway violation | **Done** | Commissioned per-camera polygon; abstains on uncommissioned cameras |
 | S4.4 Opened panel cover | **Done** | Commissioned ROI + camera fingerprint gate; best-performing detector |
 | S5 LLM + VLM path | **Done** | Groq/Gemini/offline providers; VLM promoted to a first-class detection path |
-| S6 Pipeline & evaluation | **Done** | `scripts/evaluate.py`, `calibrate*.py`, `sweep_thresholds.py`; results in `docs/eval-baseline.md` |
+| S6 Pipeline & evaluation | **Done** | `scripts/evaluate.py`, `calibrate*.py`, `sweep_thresholds.py`; both providers measured (macro F1 0.26 offline, 0.37 Groq) in `docs/eval-baseline.md` |
 | Module 3 Escalation | **Done** | LOW/MED -> log, HIGH/CRIT -> log + WebSocket; multi-violation independence tested |
 | Module 4 Reports | **Done** | Append-only JSONL + CSV + per-event JSON + ReportLab PDF |
 | Module 5 Dashboard | **Done** | 3 required views + policy panel; zero build step |

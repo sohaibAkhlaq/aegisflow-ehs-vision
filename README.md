@@ -197,10 +197,28 @@ Full detail, including every threshold sweep and the cues that were measured and
 **[docs/eval-baseline.md](docs/eval-baseline.md)** and
 **[ADR 0003](docs/adr/0003-detector-cue-selection.md)**.
 
-> **With a Groq key configured**, the three classes whose classical cues fail are answered by a
-> vision model asked the policy's *own* indicator questions — a path that is more
-> policy-traceable than the contour heuristics it replaces. Not yet measured; no key was
-> available during the build.
+### With a Groq key configured
+
+The classes whose classical cues fail are answered by a vision model asked the policy's *own*
+indicator questions — a path that is more policy-traceable than the contour heuristics it
+replaces. Same clips, same thresholds, 261 VLM calls:
+
+| Behaviour | F1 offline | F1 with Groq | |
+|---|---:|---:|---|
+| Opened Panel Cover | 0.53 | **0.53** | unchanged |
+| Safe Walkway Violation | 0.37 | **0.45** | +0.08 |
+| Carrying Overload with Forklift | 0.00 | **0.40** | +0.40, at precision 1.00 |
+| Unauthorized Intervention | 0.13 | **0.10** | −0.04 |
+| **Macro F1** | 0.26 | **0.37** | **+43% relative** |
+
+The average hides the point. Forklift overload is the class the offline build scores zero on
+by design, and the VLM recovers it *without a single false positive*. Walkway improves
+modestly. Unauthorized intervention gets slightly **worse** — the VLM adds false positives
+without recovering a positive. So the provider path is decisive for one class, helpful for a
+second, and mildly harmful for a third; it is not a general uplift.
+
+Cost: ~47% more wall-clock (7.9 s/clip vs 5.4 s) and 261 API calls per 87 clips.
+Per-class detail in **[docs/eval-baseline.md](docs/eval-baseline.md)**.
 
 ---
 
