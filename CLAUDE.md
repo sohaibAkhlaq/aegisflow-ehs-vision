@@ -59,7 +59,7 @@ seeding only.
 ## Repository map
 
 ```
-aegisflow-ehs/
+aegisflow-ehs-vision/
 ├── CONTEXT.md, IMPLEMENTATION_PLAN.md, HANDOVER.md, CLAUDE.md, README.md
 ├── compliance_policy.pdf        # KMP-OHS-POL-001, the source of truth
 ├── config/

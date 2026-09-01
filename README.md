@@ -76,7 +76,7 @@ produced its tier.
 ## Quick start
 
 ```bash
-git clone <repo-url> && cd aegisflow-ehs
+git clone https://github.com/sohaibAkhlaq/aegisflow-ehs-vision.git && cd aegisflow-ehs-vision
 
 # Windows
 powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
