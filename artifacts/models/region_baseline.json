@@ -1,0 +1,117 @@
+{
+  "source": "convex hull of foot points observed during compliant walking",
+  "policy_reference": "Section 3.2 - Designated Safe Walkway boundaries",
+  "calibrated_on": {
+    "split": "train",
+    "class": "4_safe_walkway",
+    "clips": 24,
+    "frame_size": [
+      640,
+      360
+    ],
+    "shrink": 0.03
+  },
+  "cameras": {
+    "CAM-01": {
+      "walkway_polygon": [
+        [
+          0.88696,
+          0.98066
+        ],
+        [
+          0.50471,
+          0.98933
+        ],
+        [
+          0.49723,
+          0.98777
+        ],
+        [
+          0.74725,
+          0.41347
+        ],
+        [
+          0.78266,
+          0.37435
+        ],
+        [
+          0.80108,
+          0.38988
+        ],
+        [
+          0.83536,
+          0.4516
+        ],
+        [
+          0.84201,
+          0.49624
+        ],
+        [
+          0.87062,
+          0.72226
+        ]
+      ],
+      "observed_points": 164,
+      "area_fraction": 0.1388
+    },
+    "CAM-02": {
+      "walkway_polygon": [
+        [
+          0.95074,
+          0.41688
+        ],
+        [
+          0.93347,
+          0.80682
+        ],
+        [
+          0.80377,
+          0.9855
+        ],
+        [
+          0.8007,
+          0.98644
+        ],
+        [
+          0.79944,
+          0.98644
+        ],
+        [
+          0.38904,
+          0.98611
+        ],
+        [
+          0.18359,
+          0.98341
+        ],
+        [
+          0.12015,
+          0.19455
+        ],
+        [
+          0.12084,
+          0.19358
+        ],
+        [
+          0.12287,
+          0.19254
+        ],
+        [
+          0.12316,
+          0.19249
+        ],
+        [
+          0.73675,
+          0.0942
+        ],
+        [
+          0.74757,
+          0.10448
+        ]
+      ],
+      "observed_points": 237,
+      "area_fraction": 0.6329
+    }
+  },
+  "note": "Commissioning parameter, equivalent to drawing the walkway on screen at install time. It tells the detector WHERE the permitted pedestrian zone is; whether a person is inside it remains the policy's observable indicator."
+}

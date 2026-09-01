@@ -1,0 +1,50 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---- Secrets & local config ----
+.env
+.env.local
+*.key
+config/settings.local.yaml
+
+# ---- Dataset (9.4 GB of Kaggle clips - never commit) ----
+data/
+
+# ---- Model weights (downloaded on first run) ----
+artifacts/models/*.pt
+artifacts/models/*.onnx
+
+# ---- Generated runtime output ----
+outputs/reports/*
+outputs/annotated/*
+outputs/eval/*
+!outputs/**/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# ---- Frontend ----
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json

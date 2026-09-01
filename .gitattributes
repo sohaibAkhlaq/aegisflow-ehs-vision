@@ -1,0 +1,18 @@
+# Normalise line endings so a Windows checkout and a Linux CI agree.
+* text=auto eol=lf
+
+# Windows-only script keeps CRLF.
+*.ps1 text eol=crlf
+
+# Binary - never diff or line-ending-convert these.
+*.pdf   binary
+*.mp4   binary
+*.pt    binary
+*.onnx  binary
+*.png   binary
+*.jpg   binary
+*.db    binary
+
+# Keep generated artefacts out of diffs and language stats.
+artifacts/**   linguist-generated=true
+docs/reference/** linguist-documentation=true

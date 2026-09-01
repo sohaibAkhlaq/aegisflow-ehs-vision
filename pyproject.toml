@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aegisflow-ehs"
+version = "0.1.0"
+description = "AI-powered factory compliance & alert escalation system, grounded in KMP-OHS-POL-001"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Sohaib Akhlaq" }, { name = "Aimen" }]
+
+[project.scripts]
+aegisflow = "aegisflow.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
+asyncio_mode = "auto"
+filterwarnings = [
+  "ignore::DeprecationWarning:pypdf.*",
+  "ignore:ARC4 has been moved:UserWarning",
+  "ignore::cryptography.utils.CryptographyDeprecationWarning",
+]
+markers = [
+  "slow: touches real video files or downloads model weights",
+  "llm: requires a live LLM provider API key",
+  "integration: exercises more than one module together",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+ignore = [
+  "B008",    # FastAPI Depends() in a default is idiomatic
+  "RUF001",  # arrows and similar in prose docstrings are deliberate
+  "RUF002",
+  "RUF003",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["aegisflow"]
+mypy_path = "src"
+ignore_missing_imports = true
+warn_unused_ignores = true

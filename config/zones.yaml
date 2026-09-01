@@ -1,0 +1,41 @@
+# ===========================================================================
+# Camera / zone map.
+#
+# The dataset clips come from two fixed-angle UNV IPC2122CR3-PF40-A cameras
+# (policy Section 7.1).  `zone` is a required field on every compliance
+# record (Module 4), so every clip must resolve to one.
+#
+# Resolution order used by src/aegisflow/core/zoning.py:
+#   1. explicit clip_overrides entry
+#   2. class_default for the clip's behaviour class
+#   3. "Zone-Unassigned"
+# ===========================================================================
+
+zones:
+  Zone-1:
+    label: "Production Floor - Pedestrian Corridor"
+    camera: CAM-01
+    domains: [pedestrian_movement, forklift_load]
+  Zone-2:
+    label: "Machine Line - Equipment & Electrical Panels"
+    camera: CAM-02
+    domains: [equipment_intervention, electrical_panel_management]
+
+# Which zone a behaviour class is observed in, by default.
+class_default:
+  safe_walkway_violation: Zone-1
+  safe_walkway: Zone-1
+  carrying_overload_with_forklift: Zone-1
+  safe_carrying: Zone-1
+  unauthorized_intervention: Zone-2
+  authorized_intervention: Zone-2
+  opened_panel_cover: Zone-2
+  closed_panel_cover: Zone-2
+
+clip_overrides: {}
+
+# Normalised polygon (x, y in 0..1) of the green-marked Designated Safe
+# Walkway per camera, used by the walkway detector as the reference boundary
+# (policy Section 3.2).  Populated by scripts/annotate_walkway.py; until then
+# the detector falls back to live green-line segmentation per frame.
+walkway_polygons: {}

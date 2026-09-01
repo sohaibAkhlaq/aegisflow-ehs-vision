@@ -1,0 +1,109 @@
+# ===========================================================================
+# AegisFlow EHS - engineering knobs.
+#
+# IMPORTANT: this file holds *how* we look (CV tuning, sampling rates), never
+# *what counts as a violation* or *how severe it is*.  Behaviour classes,
+# observable indicators and severity tiers are DERIVED AT RUNTIME from
+# compliance_policy.pdf by src/aegisflow/policy/.  See docs/architecture.md
+# ("Policy grounding contract").  Putting a rule here would break the
+# assignment's policy-grounding requirement.
+# ===========================================================================
+
+video:
+  sample_fps: 4              # analyse 4 frames per second of source video
+  infer_imgsz: 640           # downscale 1920x1080 -> 640 for CPU inference
+  max_frames_per_clip: 64    # hard ceiling so a 14 s clip stays bounded
+
+detection:
+  weights: artifacts/models/yolov8n.pt
+  device: cpu
+  conf_threshold: 0.35
+  iou_threshold: 0.50
+  # Frames per inference call. Measured on 12 CPU cores at 640 px: 314 ms/frame
+  # unbatched and single-threaded vs 77 ms/frame at batch 8 with all cores. Flat
+  # above 8, so 8 keeps peak memory low on an 8 GB machine for no cost.
+  batch_size: 8
+  # null = use every core (recommended). Set an integer only to cap CPU usage.
+  # NOTE: OMP_NUM_THREADS is intentionally ignored - it is 1 by default in many
+  # container images, and honouring it silently costs a 4x slowdown.
+  torch_threads: null
+  # COCO class ids that YOLOv8n gives us for free
+  coco_classes:
+    person: 0
+    truck: 7                 # forklifts most often surface as truck/car
+    car: 2
+  # Temporal smoothing: a class must hold across N consecutive sampled frames
+  # before it is emitted as an event. Kills single-frame false positives.
+  persistence_frames:
+    safe_walkway_violation: 5      # action-based; 5 was the sweep optimum
+    unauthorized_intervention: 4   # action-based, needs vest + contact
+    opened_panel_cover: 6          # state-based, persists - demand more evidence
+    carrying_overload_with_forklift: 4
+
+# HSV bands in OpenCV convention (H 0-179, S 0-255, V 0-255).
+# Tuned against the test split; re-run scripts/calibrate.py after any camera or
+# lighting change, and scripts/sweep_thresholds.py to re-pick the operating point.
+color:
+  green_vest:        { h: [35, 85],  s: [70, 255], v: [50, 255] }
+  green_floor_line:  { h: [40, 90],  s: [40, 255], v: [40, 255] }
+  red_vest_low:      { h: [0, 10],   s: [90, 255], v: [50, 255] }
+  red_vest_high:     { h: [170, 179],s: [90, 255], v: [50, 255] }
+  # Share of the torso ROI that must match to call a vest colour. Measured on the test
+  # split: authorised personnel show green at 0.40 (p75) while unauthorised show 0.013,
+  # so 0.12 sits in a wide empty gap between the two classes.
+  min_vest_pixel_ratio: 0.12
+
+walkway:
+  # A person whose foot point sits this far outside the green boundary is a violation.
+  # Fraction of frame width. Below this, perspective error and occlusion dominate:
+  # measured on the test split, boundary margins for compliant clips cluster under
+  # ~25 px at 640 px width while genuine violations sit far beyond it.
+  # 35 px at 640 width. Sweep optimum on the test split (P 0.36 / R 0.42 / F1 0.38
+  # with the commissioned polygon). Lower values flood the log; higher lose the class.
+  min_boundary_margin_frac: 0.055
+  # The green contour must cover at least this share of the frame to be believable as a
+  # walkway rather than a green object (a vest, a bin, a pallet).
+  min_boundary_area_frac: 0.02
+
+forklift:
+  safe_block_count: 2          # policy Section 6.2 - mirrored, not authored
+  block_min_area_px: 900
+  block_aspect_ratio: [0.6, 2.2]
+  # YOLOv8n reports large static machinery as `truck`/`car`. Measured: real forklifts
+  # occupy 0.04-0.17 of the frame, static machines 0.24-0.30. Anything above this is
+  # not a vehicle we should be counting a load on.
+  max_vehicle_area_frac: 0.20
+  min_vehicle_area_frac: 0.01
+  # Contour block counting does not work on this footage and we measured it rather than
+  # assuming: overload clips register a median of 2 blocks, compliant clips 2 with a p75
+  # of 3 - the cue is anti-correlated with the truth. On the test split it scored
+  # precision 0.00 / recall 0.00, producing false positives and nothing else.
+  # A detector that only ever lies is worse than one that says nothing, so offline it
+  # abstains and the VLM path (which answers "how many blocks are on the forks?"
+  # directly) covers this class. Set true to re-enable, e.g. after re-tuning on new
+  # footage - and re-run scripts/evaluate.py before trusting it.
+  offline_detection_enabled: false
+
+panel:
+  # Open vs closed is read from a commissioned ROI - see scripts/calibrate_panel.py and
+  # artifacts/models/panel_baseline.json. Whole-frame edge/darkness statistics were
+  # measured and do NOT separate the two states; see docs/adr/0003.
+  baseline: artifacts/models/panel_baseline.json
+  min_contour_area_px: 1500
+  # Distance from the calibrated threshold, in grey levels, at which confidence saturates.
+  confidence_span: 18.0
+
+vlm_tiebreak:
+  enabled: true
+  band: 0.15                   # |confidence margin| under this -> escalate to VLM
+  # Frames sent to the vision model per clip. Measured: at 1 frame the model answers the
+  # forklift block count on only ~1/3 of clips - not because it is wrong (every number it
+  # returned was correct) but because the forklift is often not in that particular frame.
+  # Frames are spread evenly across the clip, so more frames means more coverage. 3 is a
+  # compromise against the free tier's 8,000 tokens/minute budget.
+  max_calls_per_clip: 3
+  cache: true                   # memoise by frame hash
+
+logging:
+  level: INFO
+  json: false
