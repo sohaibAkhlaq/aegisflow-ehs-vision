@@ -2,7 +2,7 @@
   "document_id": "KMP-OHS-POL-001",
   "source_path": "compliance_policy.pdf",
   "source_sha256": "fa9618e4e17566661ae8557d1fb8ad27307bb4ec2cc3a0eacb56a8bb389bfd05",
-  "parsed_at": "2026-09-01T19:11:53.511933+00:00",
+  "parsed_at": "2026-09-25T22:26:18.103465+00:00",
   "extraction_method": "deterministic",
   "rules": [
     {
