@@ -82,7 +82,7 @@ forklift:
   # abstains and the VLM path (which answers "how many blocks are on the forks?"
   # directly) covers this class. Set true to re-enable, e.g. after re-tuning on new
   # footage - and re-run scripts/evaluate.py before trusting it.
-  offline_detection_enabled: false
+  offline_detection_enabled: true 
 
 panel:
   # Open vs closed is read from a commissioned ROI - see scripts/calibrate_panel.py and
