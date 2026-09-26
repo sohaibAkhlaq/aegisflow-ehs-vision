@@ -213,7 +213,7 @@ class PolicyRAG:
                 result["metadatas"][0],
                 result["distances"][0],
                 strict=True,
-                ):
+            ):
                 out.append(
                     RetrievedChunk(
                         text=doc,

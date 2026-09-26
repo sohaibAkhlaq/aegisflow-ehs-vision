@@ -37,10 +37,8 @@ async def draft_incident(event: dict, feedback: str = "") -> IncidentDraft:
     from aegisflow.llm import build_provider
 
     feedback_block = (
-    f"\nThe previous draft was rejected with this feedback: {feedback}\n"
-    if feedback
-    else ""
-)
+        f"\nThe previous draft was rejected with this feedback: {feedback}\n" if feedback else ""
+    )
     prompt = DRAFT_PROMPT.format(feedback_block=feedback_block, **event)
 
     schema = {

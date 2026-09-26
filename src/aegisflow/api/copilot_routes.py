@@ -32,9 +32,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
     try:
         return await handle_message(request.session_id, request.message)
     except Exception as exc:
-        raise HTTPException(
-            status_code=502, detail=f"copilot could not answer: {exc}"
-        ) from exc
+        raise HTTPException(status_code=502, detail=f"copilot could not answer: {exc}") from exc
 
 
 @router.delete("/sessions/{session_id}")

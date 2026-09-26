@@ -44,9 +44,7 @@ class ConversationMemory:
 
     async def append(self, session_id: str, role: str, content: str) -> None:
         async with session_scope() as session:
-            session.add(
-                CopilotMessageRow(session_id=session_id, role=role, content=content)
-            )
+            session.add(CopilotMessageRow(session_id=session_id, role=role, content=content))
 
     async def get_history(self, session_id: str, limit: int = 20) -> list[ChatMessage]:
         """Most recent ``limit`` turns for this session, oldest first."""

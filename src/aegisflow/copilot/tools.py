@@ -172,8 +172,7 @@ async def retrieve_policy_context(question: str, k: int = 3) -> list[dict[str, A
     rag = _get_rag()
     chunks = rag.query(question, k=k)
     return [
-        {"text": c.text, "section_ref": c.section_ref, "score": round(c.score, 3)}
-        for c in chunks
+        {"text": c.text, "section_ref": c.section_ref, "score": round(c.score, 3)} for c in chunks
     ]
 
 

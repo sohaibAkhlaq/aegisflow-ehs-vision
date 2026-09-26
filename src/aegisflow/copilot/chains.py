@@ -118,7 +118,7 @@ async def answer_with_citations(
                 prompt=f"Question: {question}",
                 schema=schema,
                 system=SYSTEM_PROMPT.format(context=context),
-                )
+            )
             return result.get("answer", ""), citations
         except LLMProviderError as exc:
             return f"The LLM provider call failed: {exc}", citations

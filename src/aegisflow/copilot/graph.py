@@ -88,10 +88,10 @@ def _build_langgraph() -> Any:
     graph.add_edge("gather_context", "draft")
     graph.add_edge("draft", "review")
     graph.add_conditional_edges(
-    "review",
-    _route_after_review,
-    {"draft": "draft", "finalize": "finalize"},
-)
+        "review",
+        _route_after_review,
+        {"draft": "draft", "finalize": "finalize"},
+    )
     graph.add_edge("finalize", END)
     return graph.compile()
 

@@ -64,14 +64,13 @@ async def _run_langchain_agent(question: str, history: list[dict[str, str]]) -> 
     agent = create_tool_calling_agent(model, tools, prompt)
     executor = AgentExecutor(agent=agent, tools=tools, return_intermediate_steps=True)
 
-
     chat_history = [
-    (
-        HumanMessage(content=m["content"])
-        if m["role"] == "user"
-        else AIMessage(content=m["content"])
-    )
-    for m in history
+        (
+            HumanMessage(content=m["content"])
+            if m["role"] == "user"
+            else AIMessage(content=m["content"])
+        )
+        for m in history
     ]
     result = await executor.ainvoke({"input": question, "chat_history": chat_history})
 
@@ -144,7 +143,7 @@ async def _run_fallback_router(question: str) -> ChatResponse:
                 answer=answer,
                 tool_calls=tool_calls,
                 citations=[section_ref],
-                )
+            )
 
     if any(kw in lowered for kw in _STATS_KEYWORDS):
         stats = await get_stats()
@@ -195,14 +194,14 @@ async def _run_fallback_router(question: str) -> ChatResponse:
     from aegisflow.copilot.rag import RetrievedChunk
 
     retrieved = [
-    RetrievedChunk(
-        text=c["text"],
-        section_ref=c["section_ref"],
-        score=c["score"],
-        source="tool",
-    )
-    for c in chunks
-]
+        RetrievedChunk(
+            text=c["text"],
+            section_ref=c["section_ref"],
+            score=c["score"],
+            source="tool",
+        )
+        for c in chunks
+    ]
     answer, citations = await answer_with_citations(question, retrieved)
     return ChatResponse(session_id="", answer=answer, tool_calls=tool_calls, citations=citations)
 
