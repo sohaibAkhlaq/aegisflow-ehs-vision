@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from typing import Any, TypedDict
 
-from aegisflow.copilot import CopilotDependencyError
 from aegisflow.copilot.agents.drafter import draft_incident
 from aegisflow.copilot.agents.reviewer import review_draft
 from aegisflow.copilot.schemas import IncidentReport
@@ -88,7 +87,11 @@ def _build_langgraph() -> Any:
     graph.set_entry_point("gather_context")
     graph.add_edge("gather_context", "draft")
     graph.add_edge("draft", "review")
-    graph.add_conditional_edges("review", _route_after_review, {"draft": "draft", "finalize": "finalize"})
+    graph.add_conditional_edges(
+    "review",
+    _route_after_review,
+    {"draft": "draft", "finalize": "finalize"},
+)
     graph.add_edge("finalize", END)
     return graph.compile()
 

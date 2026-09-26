@@ -209,8 +209,11 @@ class PolicyRAG:
             result = self._chroma_collection.query(query_embeddings=query_embedding, n_results=k)
             out: list[RetrievedChunk] = []
             for doc, meta, dist in zip(
-                result["documents"][0], result["metadatas"][0], result["distances"][0]
-            ):
+                result["documents"][0],
+                result["metadatas"][0],
+                result["distances"][0],
+                strict=True,
+                ):
                 out.append(
                     RetrievedChunk(
                         text=doc,

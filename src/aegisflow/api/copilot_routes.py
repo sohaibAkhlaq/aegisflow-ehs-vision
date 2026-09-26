@@ -31,7 +31,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
     the frontend generates once per browser tab and reuses for the conversation."""
     try:
         return await handle_message(request.session_id, request.message)
-    except Exception as exc:  # noqa: BLE001 - copilot failures must not crash the API
+    except Exception as exc:
         raise HTTPException(
             status_code=502, detail=f"copilot could not answer: {exc}"
         ) from exc

@@ -33,7 +33,10 @@ def _format_context(chunks: list[RetrievedChunk]) -> str:
     return "\n\n".join(f"[{c.section_ref}] {c.text}" for c in chunks)
 
 
-def build_rag_answer_chain(model_name: str = "openai/gpt-oss-120b", temperature: float = 0.0) -> Any:
+def build_rag_answer_chain(
+    model_name: str = "openai/gpt-oss-120b",
+    temperature: float = 0.0,
+) -> Any:
     """Build the LCEL chain: prompt -> ChatGroq -> string parser.
 
     Returns a Runnable with an ``.invoke({"question": ..., "context": ...})`` method,
@@ -112,8 +115,10 @@ async def answer_with_citations(
         }
         try:
             result = await provider.complete_json(
-                prompt=f"Question: {question}", schema=schema, system=SYSTEM_PROMPT.format(context=context)
-            )
+                prompt=f"Question: {question}",
+                schema=schema,
+                system=SYSTEM_PROMPT.format(context=context),
+                )
             return result.get("answer", ""), citations
         except LLMProviderError as exc:
             return f"The LLM provider call failed: {exc}", citations

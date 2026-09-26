@@ -16,7 +16,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, Index, Integer, String, Text, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aegisflow.copilot.schemas import ChatMessage

@@ -39,7 +39,7 @@ from aegisflow.copilot.tools import (
 )
 
 
-def build_server() -> "object":
+def build_server() -> object:
     """Build the FastMCP server instance. Raises :class:`CopilotDependencyError` if
     the ``mcp`` package is not installed."""
     try:

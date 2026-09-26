@@ -24,10 +24,8 @@ from aegisflow.copilot import CopilotDependencyError
 from aegisflow.copilot.memory import ConversationMemory
 from aegisflow.copilot.schemas import ChatResponse, ToolCallRecord
 from aegisflow.copilot.tools import (
-    TOOL_REGISTRY,
     get_policy_rule,
     get_stats,
-    list_policy_rules,
     query_events,
     retrieve_policy_context,
 )
@@ -66,9 +64,14 @@ async def _run_langchain_agent(question: str, history: list[dict[str, str]]) -> 
     agent = create_tool_calling_agent(model, tools, prompt)
     executor = AgentExecutor(agent=agent, tools=tools, return_intermediate_steps=True)
 
+
     chat_history = [
-        HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"])
-        for m in history
+    (
+        HumanMessage(content=m["content"])
+        if m["role"] == "user"
+        else AIMessage(content=m["content"])
+    )
+    for m in history
     ]
     result = await executor.ainvoke({"input": question, "chat_history": chat_history})
 
@@ -136,12 +139,21 @@ async def _run_fallback_router(question: str) -> ChatResponse:
                 f"{section_ref} ({rule['callout']}) covers {rule['behavior_class']}: "
                 f'"{rule["source_quote"]}"'
             )
-            return ChatResponse(session_id="", answer=answer, tool_calls=tool_calls, citations=[section_ref])
+            return ChatResponse(
+                session_id="",
+                answer=answer,
+                tool_calls=tool_calls,
+                citations=[section_ref],
+                )
 
     if any(kw in lowered for kw in _STATS_KEYWORDS):
         stats = await get_stats()
         tool_calls.append(
-            ToolCallRecord(tool_name="get_stats", arguments={}, result_summary=json.dumps(stats)[:200])
+            ToolCallRecord(
+                tool_name="get_stats",
+                arguments={},
+                result_summary=json.dumps(stats)[:200],
+            )
         )
         answer = (
             f"There are {stats['total_events']} logged events in total. "
@@ -179,10 +191,18 @@ async def _run_fallback_router(question: str) -> ChatResponse:
             result_summary=json.dumps(chunks)[:200],
         )
     )
-    from aegisflow.copilot.rag import RetrievedChunk
     from aegisflow.copilot.chains import answer_with_citations
+    from aegisflow.copilot.rag import RetrievedChunk
 
-    retrieved = [RetrievedChunk(text=c["text"], section_ref=c["section_ref"], score=c["score"], source="tool") for c in chunks]
+    retrieved = [
+    RetrievedChunk(
+        text=c["text"],
+        section_ref=c["section_ref"],
+        score=c["score"],
+        source="tool",
+    )
+    for c in chunks
+]
     answer, citations = await answer_with_citations(question, retrieved)
     return ChatResponse(session_id="", answer=answer, tool_calls=tool_calls, citations=citations)
 
