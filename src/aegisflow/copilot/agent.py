@@ -42,9 +42,13 @@ async def _run_langchain_agent(question: str, history: list[dict[str, str]]) -> 
     from langchain_groq import ChatGroq
 
     from aegisflow.copilot.tools import as_langchain_tools
+    from aegisflow.core.settings import get_settings
 
+    # Same fix as chains.py: pass the key explicitly rather than relying on ChatGroq's
+    # own os.environ lookup, which aegisflow's .env loader doesn't populate.
+    settings = get_settings()
     tools = as_langchain_tools()
-    model = ChatGroq(model="openai/gpt-oss-120b", temperature=0.0)
+    model = ChatGroq(model="openai/gpt-oss-120b", temperature=0.0, api_key=settings.groq_api_key)
     prompt = ChatPromptTemplate.from_messages(
         [
             (

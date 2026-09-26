@@ -43,7 +43,25 @@ async function sendMessage(input, log) {
       body: JSON.stringify({ session_id: getSessionId(), message }),
     });
     if (!response.ok) {
-      throw new Error(`copilot returned ${response.status}`);
+      let detail = '';
+      try {
+        const body = await response.json();
+        detail = body.detail || '';
+      } catch {
+        // response wasn't JSON - ignore, we'll use the generic message below
+      }
+      thinking.remove();
+      if (response.status === 502 || /rate.?limit/i.test(detail)) {
+        appendMessage(
+          log,
+          'error',
+          "The AI provider is briefly rate-limited (too many requests in a short time). " +
+            'Wait about 15 seconds and try again — this is expected on the free tier, not a bug.'
+        );
+      } else {
+        appendMessage(log, 'error', `Could not reach the copilot (${response.status}). ${detail}`);
+      }
+      return;
     }
     const data = await response.json();
     thinking.remove();

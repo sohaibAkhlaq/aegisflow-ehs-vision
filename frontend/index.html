@@ -7,6 +7,7 @@
   <meta name="description" content="Policy-grounded factory compliance monitoring and alert escalation." />
   <link rel="icon" href="/favicon.ico" />
   <link rel="stylesheet" href="/assets/app.css" />
+  <link rel="stylesheet" href="/assets/copilot.css" />
 </head>
 <body>
 
@@ -56,6 +57,9 @@
   </button>
   <button class="tab" role="tab" id="tab-policy" aria-controls="view-policy" aria-selected="false" data-view="policy">
     Policy &amp; Severity Matrix
+  </button>
+  <button class="tab" role="tab" id="tab-copilot" aria-controls="view-copilot" aria-selected="false" data-view="copilot">
+    💬 Ask AI
   </button>
 </nav>
 
@@ -213,8 +217,31 @@
       </div>
     </div>
   </section>
+
+  <!-- ================= Ask AI copilot ================= -->
+  <section class="view" id="view-copilot" role="tabpanel" aria-labelledby="tab-copilot" hidden>
+    <div class="panel">
+      <div class="panel__head">
+        <span class="panel__title">Ask AI</span>
+        <span class="panel__hint">
+          Ask about the policy or logged events in plain English. Answers about the
+          policy cite the section they're based on.
+        </span>
+      </div>
+      <div class="panel__body">
+        <div class="copilot-panel">
+          <div class="copilot-log" id="copilot-log"></div>
+          <div class="copilot-input-row">
+            <textarea id="copilot-input" placeholder="e.g. How many CRITICAL events this week?" rows="1"></textarea>
+            <button id="copilot-send" class="btn btn--primary">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script type="module" src="/assets/app.js"></script>
+<script type="module" src="/assets/copilot.js"></script>
 </body>
 </html>

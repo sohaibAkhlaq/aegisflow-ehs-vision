@@ -156,7 +156,9 @@ async def clip_video(clip_id: str, session: SessionDep) -> FileResponse:
         path = get_settings().path(path)
     if not path.exists():
         raise HTTPException(status_code=404, detail="annotated video file is missing on disk")
-    return FileResponse(path, media_type="video/mp4", filename=path.name)
+    return FileResponse(
+        path, media_type="video/mp4", filename=path.name, content_disposition_type="inline"
+    )
 
 
 # ---------------------------------------------------------------------------

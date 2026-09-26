@@ -46,13 +46,20 @@ def build_rag_answer_chain(model_name: str = "openai/gpt-oss-120b", temperature:
     except ImportError as exc:
         raise CopilotDependencyError("The LCEL answer chain", "langchain-groq") from exc
 
+    # ChatGroq falls back to reading GROQ_API_KEY from os.environ if api_key isn't
+    # passed explicitly - but aegisflow's own Settings loads .env into its own object
+    # without necessarily exporting it to the process environment, so that lookup can
+    # silently fail even with a valid key on disk. Pass it through explicitly instead.
+    from aegisflow.core.settings import get_settings
+
+    settings = get_settings()
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", SYSTEM_PROMPT),
             ("human", "{question}"),
         ]
     )
-    model = ChatGroq(model=model_name, temperature=temperature)
+    model = ChatGroq(model=model_name, temperature=temperature, api_key=settings.groq_api_key)
     parser = StrOutputParser()
 
     # The LCEL pipe operator: this IS the pattern, not a metaphor for it.
