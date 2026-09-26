@@ -1,0 +1,21 @@
+# AegisFlow Copilot - optional extra dependencies.
+#
+# Install with: pip install -r requirements-copilot.txt
+#
+# Every one of these is OPTIONAL at runtime - the copilot degrades gracefully to a
+# simpler fallback path if a package here is missing (see docs/copilot-architecture.md
+# and the module docstrings in src/aegisflow/copilot/ for exactly which fallback each
+# one has). Nothing in the core, graded pipeline (src/aegisflow/{policy,severity,
+# detection,escalation,reports,api,db}) imports from this file's packages.
+
+langchain==0.3.14
+langchain-core==0.3.29
+langchain-groq==0.2.3
+langgraph==0.2.62
+chromadb==0.5.23
+sentence-transformers==3.3.1
+mcp==1.1.2
+langsmith==0.2.10
+
+# Test-only, also optional (only needed to run tests/unit/test_copilot_*.py):
+pytest-asyncio==0.25.0

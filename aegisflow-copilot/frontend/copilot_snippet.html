@@ -1,0 +1,48 @@
+<!--
+  AegisFlow Copilot - integration snippet.
+
+  This is NOT a standalone page - copy the three pieces below into your existing
+  frontend/index.html, at the marked locations. Nothing else in index.html needs
+  to change; the existing tab-switching JS in app.js works automatically because
+  it selects generically by `.tab` / `.view` / `data-view`, not by hardcoded IDs.
+-->
+
+<!-- ============================================================ -->
+<!-- 1. Paste this <button> inside the existing <nav class="tabs">, -->
+<!--    right after the last existing tab button (e.g. after         -->
+<!--    #tab-policy's closing </button>, before </nav>)               -->
+<!-- ============================================================ -->
+<button class="tab" role="tab" id="tab-copilot" aria-controls="view-copilot"
+        aria-selected="false" data-view="copilot">
+  💬 Ask AI
+</button>
+
+<!-- ============================================================ -->
+<!-- 2. Paste this <section> as a new sibling of the existing        -->
+<!--    <section class="view" id="view-live">, id="view-timeline">,  -->
+<!--    etc. - anywhere among them, before the closing </main> or    -->
+<!--    equivalent wrapping element.                                  -->
+<!-- ============================================================ -->
+<section class="view" id="view-copilot" role="tabpanel" aria-labelledby="tab-copilot" hidden>
+  <h2>Ask AI</h2>
+  <p class="view-description">
+    Ask about the policy or logged events in plain English. Answers about the
+    policy cite the section they're based on.
+  </p>
+  <div class="copilot-panel">
+    <div class="copilot-log" id="copilot-log"></div>
+    <div class="copilot-input-row">
+      <textarea id="copilot-input" placeholder="e.g. How many CRITICAL events this week?" rows="1"></textarea>
+      <button id="copilot-send" class="button button--primary">Send</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 3. Paste these two lines right after the existing              -->
+<!--    <link rel="stylesheet" href="/assets/app.css"> and           -->
+<!--    <script type="module" src="/assets/app.js"></script> lines   -->
+<!--    respectively (CSS in <head>, script before </body>)          -->
+<!-- ============================================================ -->
+<link rel="stylesheet" href="/assets/copilot.css">
+<script type="module" src="/assets/copilot.js"></script>

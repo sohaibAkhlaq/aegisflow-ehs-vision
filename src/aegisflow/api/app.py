@@ -16,7 +16,8 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from aegisflow import __version__
-from aegisflow.api import routes, ws
+from aegisflow.api import routes, ws, copilot_routes
+from aegisflow-copilot import memory as copilot_memory  # noqa: F401 - registers the table
 from aegisflow.core.logging import configure_logging, get_logger
 from aegisflow.core.settings import Settings, get_settings
 from aegisflow.db.session import dispose_engine, init_db
@@ -80,6 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(routes.router)
     app.include_router(ws.router)
+    app.include_router(copilot_routes.router)
 
     _mount_dashboard(app, settings)
     return app

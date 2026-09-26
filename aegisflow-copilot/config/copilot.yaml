@@ -1,0 +1,29 @@
+# ===========================================================================
+# AegisFlow Copilot - configuration for the additive chat/agent feature.
+#
+# Kept entirely separate from config/settings.yaml on purpose: this file only
+# affects the copilot subsystem (src/aegisflow/copilot/). Nothing in the graded
+# Modules 1-5 pipeline reads this file, and this file contains no compliance
+# rules or severity logic - same "policy grounding contract" as the core system.
+# ===========================================================================
+
+rag:
+  embedding_model: all-MiniLM-L6-v2   # sentence-transformers model, if installed
+  persist_dir: artifacts/chroma_db
+  top_k: 3
+  # If chromadb/sentence-transformers aren't installed, or the embedding model can't
+  # be downloaded, PolicyRAG falls back to a pure-Python TF-IDF index automatically.
+  # See src/aegisflow/copilot/rag.py.
+
+agent:
+  model: openai/gpt-oss-120b     # same Groq text model the core pipeline already uses
+  temperature: 0.0
+  max_history_turns: 10          # how many prior turns of session memory to include
+
+incident_workflow:
+  max_review_rounds: 3           # drafter<->reviewer retry cap before forced finalize
+  trigger_severities: [HIGH, CRITICAL]   # which escalation tiers trigger the workflow
+
+mcp_server:
+  name: aegisflow-ehs
+  # See src/aegisflow/copilot/mcp_server.py for the Claude Desktop config snippet.
