@@ -12,6 +12,7 @@ Turn raw factory CCTV into a policy-grounded, auditable safety compliance record
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Dashboard](https://img.shields.io/badge/Dashboard-zero--build-38BDF8?logo=javascript&logoColor=white)](frontend/)
 [![SQLite](https://img.shields.io/badge/SQLite-append--only-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![LangChain](https://img.shields.io/badge/Copilot-LangChain%20%2B%20LangGraph-1C3C3C?logo=langchain&logoColor=white)](docs/copilot-architecture.md)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
@@ -51,6 +52,8 @@ raises can be traced back to the sentence in the manual that justifies it.
    (1920×1080)                    ┌──────────────────────────────────────┐
                                   │  MODULE 5 · OPERATIONS DASHBOARD     │
                                   │  Live Feed · Alert Timeline · Log    │
+                                  │  Historical Log · Policy Matrix ·    │
+                                  │  💬 Ask AI (Copilot, additive)       │
                                   └──────────────────────────────────────┘
 ```
 
@@ -115,6 +118,9 @@ python -m aegisflow serve
 and runs the complete pipeline with zero network calls. Adding a Groq key measurably improves
 detection — see [Accuracy](#accuracy) below.
 
+**Want the AI copilot too?** It's an additive layer on top of the pipeline above — see
+[Copilot](#copilot--ai-safety-assistant) below.
+
 ---
 
 ## Repository structure
@@ -123,6 +129,7 @@ detection — see [Accuracy](#accuracy) below.
 |---|---|
 | `compliance_policy.pdf` | KMP-OHS-POL-001 — the authoritative source for every compliance decision |
 | `config/` | Engineering knobs only (HSV bands, sample rate). **No compliance rules live here.** |
+| `config/copilot.yaml` | Copilot-only settings (RAG, agent, incident workflow) — separate from the core config on purpose |
 | `data/raw/` | 691 clips across 8 classes — gitignored |
 | `src/aegisflow/core/` | Shared contracts: enums, Pydantic schemas, settings, zone resolution |
 | `src/aegisflow/policy/` | Module 2a — PDF → `PolicyRuleSet`, with faithfulness validation |
@@ -132,9 +139,10 @@ detection — see [Accuracy](#accuracy) below.
 | `src/aegisflow/escalation/` | Module 3 — severity-based routing |
 | `src/aegisflow/reports/` | Module 4 — append-only JSON / CSV / PDF audit records |
 | `src/aegisflow/api/` | FastAPI app + WebSocket alert channel |
-| `frontend/` | Module 5 — operations dashboard: three static files, no build step |
+| `src/aegisflow/copilot/` | **Copilot (additive)** — RAG, tool-calling agent, LangGraph incident workflow, session memory, MCP server. See [Copilot](#copilot--ai-safety-assistant) |
+| `frontend/` | Module 5 — operations dashboard: static files, no build step, plus the Ask AI chat panel |
 | `scripts/` | Setup, camera/panel/region commissioning, threshold sweeps, evaluation, DB seeding |
-| `docs/` | Architecture, API contract, ADRs, evaluation baseline, source PDFs |
+| `docs/` | Architecture, API contract, ADRs, evaluation baseline, source PDFs, copilot architecture |
 | `outputs/` | Generated reports, annotated clips, evaluation results |
 
 ---
@@ -150,6 +158,7 @@ detection — see [Accuracy](#accuracy) below.
 | **[CLAUDE.md](CLAUDE.md)** | Conventions, commands, and the rules that are easy to break |
 | **[docs/architecture.md](docs/architecture.md)** | Module contracts and data flow in detail |
 | **[docs/adr/](docs/adr/)** | Why each significant technical choice was made |
+| **[docs/copilot-architecture.md](docs/copilot-architecture.md)** | The Copilot's design, component map, and setup |
 
 ---
 
@@ -222,6 +231,41 @@ Per-class detail in **[docs/eval-baseline.md](docs/eval-baseline.md)**.
 
 ---
 
+## Copilot — AI Safety Assistant
+
+An **additive** chat assistant layered on top of the pipeline above, exposed as a "💬 Ask AI"
+tab on the dashboard. It never touches or modifies Modules 1–5 — it only reads the same
+policy PDF and the same logged events, through a second, independent code path.
+
+```bash
+pip install -r requirements-copilot.txt   # optional - everything degrades gracefully without it
+```
+
+Ask it things like:
+- *"What counts as an unauthorized intervention?"* → retrieves the real policy text and cites
+  the section (RAG)
+- *"How many CRITICAL events this week?"* → queries the live database (tool-calling agent)
+
+It also runs automatically: when a HIGH/CRITICAL event fires, a two-agent workflow drafts a
+plain-English incident summary and has a second agent verify the policy citation before it's
+finalized.
+
+| Piece | File(s) | What it demonstrates |
+|---|---|---|
+| RAG over the policy PDF | `copilot/rag.py` | Embeddings + vector search (ChromaDB, with a zero-dependency TF-IDF fallback) |
+| LangChain / LCEL | `copilot/chains.py` | `prompt \| model \| parser` composition |
+| Tool-calling agent | `copilot/tools.py`, `copilot/agent.py` | Real function calling against the live database and policy |
+| LangGraph workflow | `copilot/graph.py` | State machine: gather → draft → review → retry/finalize |
+| Multi-agent drafter/reviewer | `copilot/agents/` | A second agent independently checks the first's output before it's trusted |
+| Session memory | `copilot/memory.py` | Episodic conversation store, separate from the audit trail |
+| MCP server | `copilot/mcp_server.py` | The same tools, exposed to Claude Desktop / any MCP client |
+
+Every optional dependency above (LangChain, LangGraph, ChromaDB, sentence-transformers, MCP)
+has a fallback path — a missing package degrades the feature to something simpler, it never
+crashes the app. Full design writeup: **[docs/copilot-architecture.md](docs/copilot-architecture.md)**.
+
+---
+
 ## Design notes
 
 **Why classical CV on top of YOLO, rather than a fine-tuned detector.** The policy's observable
@@ -245,7 +289,9 @@ higher number, a worse system.
 
 **Detectors abstain rather than guess.** One without its commissioning data reports nothing and
 logs why; the panel detector verifies camera identity by scene fingerprint before applying a
-camera-specific calibration. In an audit trail, silence is a better failure than noise.
+camera-specific calibration. In an audit trail, silence is a better failure than noise. The
+Copilot's drafter/reviewer pair carries the same principle into its own layer: a rejected draft
+is retried, not shipped.
 
 **Why the policy parser comes first.** The behaviour classes, indicators, section references
 and severity tiers are all derived from the PDF at runtime. Nothing about compliance is a
@@ -259,18 +305,20 @@ LLM-extracted rule must appear verbatim in the PDF or it is discarded, and every
 consultation is recorded in the event's `detection_method`.
 
 **Why append-only.** Compliance records are evidence. `ViolationEvent` is a frozen model and
-the persistence layer exposes no update or delete path.
+the persistence layer exposes no update or delete path. The Copilot's own session-memory table
+is the one deliberate exception — chat history has no compliance value, so unlike the audit
+trail, it is deletable.
 
 ---
 
 ## Team
 
-Built by two developers working sequentially.
+Built by two developers working sequentially, plus an additive AI-copilot layer.
 
-| | Phase 1 — build | Phase 2 — deploy |
-|---|---|---|
-| **Developer** | Sohaib Akhlaq | Aimen |
-| **Scope** | All five modules, the policy parser and severity matrix, the calibration and evaluation tooling, the test suite, the dashboard, and the documentation | Containerisation, running it on the target hardware, the Groq key, the demo video, submission QA |
+| | Phase 1 — build | Phase 2 — deploy | Copilot — additive |
+|---|---|---|---|
+| **Developer** | Sohaib Akhlaq | Aimen | Aimen |
+| **Scope** | All five modules, the policy parser and severity matrix, the calibration and evaluation tooling, the test suite, the dashboard, and the documentation | Containerisation, running it on the target hardware, the Groq key, the demo video, submission QA | RAG, tool-calling agent, LangGraph incident workflow, session memory, MCP server — layered on top, nothing in Modules 1–5 changed |
 
 `HANDOVER.md` is the runbook for Phase 2. It should not be necessary to read any source to
 stand the system up.
@@ -284,8 +332,9 @@ stand the system up.
 in [docs/eval-baseline.md](docs/eval-baseline.md).
 
 ```
-pytest                       # 157 tests
+pytest                       # 157 tests (core pipeline)
 pytest -m "not slow and not llm"   # subset needing no dataset, weights or API key
+pytest tests/unit/test_copilot_rag.py tests/unit/test_copilot_tools.py tests/unit/test_copilot_memory.py  # copilot (9 tests)
 ```
 
 ## License
