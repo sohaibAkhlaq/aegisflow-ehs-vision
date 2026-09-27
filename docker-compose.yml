@@ -1,0 +1,22 @@
+services:
+  aegisflow:
+    build: .
+    container_name: aegisflow-ehs
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Override the DB URL and API host explicitly so container defaults don't
+      # silently differ from your .env's - visible here rather than hidden.
+      AEGISFLOW_API_HOST: "0.0.0.0"
+    volumes:
+      # Real footage - not baked into the image (9.4GB, and it's your data, not the code's).
+      - ./data:/app/data
+      # Generated reports, annotated clips, eval results - survive container restarts.
+      - ./outputs:/app/outputs
+      # Learned calibration files and the parsed policy rules.
+      - ./artifacts:/app/artifacts
+      # The SQLite database itself - one file, persisted on the host.
+      - ./aegisflow.db:/app/aegisflow.db
+    restart: unless-stopped

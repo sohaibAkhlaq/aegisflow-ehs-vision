@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+
+# Tests / development
+tests
+
+# Raw datasets and large media
+data/raw
+data/train
+data/test
+data/val
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.zip
+*.tar
+*.tar.gz
+
+# Not needed in Docker image
+*.ipynb
