@@ -52,9 +52,12 @@ class ConversationMemory:
             stmt = (
                 select(CopilotMessageRow)
                 .where(CopilotMessageRow.session_id == session_id)
-                .order_by(CopilotMessageRow.created_at.desc())
+                .order_by(
+                CopilotMessageRow.created_at.desc(),
+                CopilotMessageRow.id.desc(),
+                )
                 .limit(limit)
-            )
+                )
             rows = (await session.execute(stmt)).scalars().all()
 
         rows = list(reversed(rows))  # chronological order for the caller
