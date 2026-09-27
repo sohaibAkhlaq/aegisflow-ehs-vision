@@ -1,33 +1,10 @@
-"""MCP server exposing the copilot's tools to external MCP clients (Claude Desktop,
-the MCP Inspector, or any other MCP-speaking application).
-
-This deliberately reuses :mod:`aegisflow.copilot.tools`'s registry as the single
-source of truth - the same functions the in-dashboard chat agent calls are exposed
-here, so "ask the dashboard" and "ask from Claude Desktop" are two clients of one
-tool implementation, not two separate copies of the query logic.
-
-Run standalone for local testing with the MCP Inspector:
-
-    python -m aegisflow.copilot.mcp_server
-
-Or configure it as a Claude Desktop MCP server by adding to
-``claude_desktop_config.json``::
-
-    {
-      "mcpServers": {
-        "aegisflow-ehs": {
-          "command": "python",
-          "args": ["-m", "aegisflow.copilot.mcp_server"],
-          "cwd": "/absolute/path/to/aegisflow-ehs-vision"
-        }
-      }
-    }
-
-Requires the ``mcp`` package (``pip install mcp``, included in
-``requirements-copilot.txt``).
-"""
+"""MCP server exposing AegisFlow Copilot tools to external MCP clients."""
 
 from __future__ import annotations
+
+import asyncio
+import json
+from typing import Any
 
 from aegisflow.copilot import CopilotDependencyError
 from aegisflow.copilot.tools import (
@@ -40,29 +17,127 @@ from aegisflow.copilot.tools import (
 
 
 def build_server() -> object:
-    """Build the FastMCP server instance. Raises :class:`CopilotDependencyError` if
-    the ``mcp`` package is not installed."""
+    """Build the MCP server using the MCP 1.1.2 Server API."""
     try:
-        from mcp.server.fastmcp import FastMCP
+        from mcp.server import NotificationOptions, Server
+        from mcp.server.models import InitializationOptions
+        from mcp.server.stdio import stdio_server
+        from mcp.types import CallToolResult, TextContent, Tool
     except ImportError as exc:
         raise CopilotDependencyError("The MCP server", "mcp") from exc
 
-    server = FastMCP("aegisflow-ehs")
+    server = Server("aegisflow-ehs")
 
-    # Each tool is registered directly from aegisflow.copilot.tools - no re-implementation.
-    server.add_tool(query_events)
-    server.add_tool(get_stats)
-    server.add_tool(get_policy_rule)
-    server.add_tool(list_policy_rules)
-    server.add_tool(retrieve_policy_context)
+    @server.list_tools()
+    async def handle_list_tools() -> list[Tool]:
+        return [
+            Tool(
+                name="query_events",
+                description="Query EHS violation events using optional filters.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "severity": {"type": "string"},
+                        "behavior_class": {"type": "string"},
+                        "start_date": {"type": "string"},
+                        "end_date": {"type": "string"},
+                        "limit": {"type": "integer", "default": 20},
+                    },
+                },
+            ),
+            Tool(
+                name="get_stats",
+                description="Get statistics about EHS events.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "behavior_class": {"type": "string"},
+                    },
+                },
+            ),
+            Tool(
+                name="get_policy_rule",
+                description="Retrieve a policy rule using its section reference.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "section_ref": {"type": "string"},
+                    },
+                    "required": ["section_ref"],
+                },
+            ),
+            Tool(
+                name="list_policy_rules",
+                description="List all available policy rules.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {},
+                },
+            ),
+            Tool(
+                name="retrieve_policy_context",
+                description="Retrieve policy context relevant to a question.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "question": {"type": "string"},
+                        "k": {"type": "integer", "default": 3},
+                    },
+                    "required": ["question"],
+                },
+            ),
+        ]
 
-    return server
+    @server.call_tool()
+    async def handle_call_tool(
+        name: str,
+        arguments: dict[str, Any],
+    ) -> CallToolResult:
+        if name == "query_events":
+            result = await query_events(**arguments)
+        elif name == "get_stats":
+            result = await get_stats(**arguments)
+        elif name == "get_policy_rule":
+            result = await get_policy_rule(**arguments)
+        elif name == "list_policy_rules":
+            result = await list_policy_rules()
+        elif name == "retrieve_policy_context":
+            result = await retrieve_policy_context(**arguments)
+        else:
+            raise ValueError(f"Unknown tool: {name}")
+
+        return CallToolResult(
+            content=[
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, default=str),
+                )
+            ]
+        )
+
+    return server, stdio_server, InitializationOptions
+
+
+async def run_server() -> None:
+    server, stdio_server, InitializationOptions = build_server()
+
+    async with stdio_server() as (read_stream, write_stream):
+        await server.run(
+            read_stream,
+            write_stream,
+            InitializationOptions(
+                server_name="aegisflow-ehs",
+                server_version="1.0.0",
+                capabilities=server.get_capabilities(
+                    notification_options=server.notification_options,
+                    experimental_capabilities={},
+                ),
+            ),
+        )
 
 
 def main() -> None:
-    """Entry point for ``python -m aegisflow.copilot.mcp_server``."""
-    server = build_server()
-    server.run()
+    asyncio.run(run_server())
 
 
 if __name__ == "__main__":
