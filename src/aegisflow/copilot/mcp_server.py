@@ -19,7 +19,7 @@ from aegisflow.copilot.tools import (
 def build_server() -> object:
     """Build the MCP server using the MCP 1.1.2 Server API."""
     try:
-        from mcp.server import NotificationOptions, Server
+        from mcp.server import Server
         from mcp.server.models import InitializationOptions
         from mcp.server.stdio import stdio_server
         from mcp.types import CallToolResult, TextContent, Tool
@@ -119,13 +119,13 @@ def build_server() -> object:
 
 
 async def run_server() -> None:
-    server, stdio_server, InitializationOptions = build_server()
+    server, stdio_server, initialization_options = build_server()
 
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream,
             write_stream,
-            InitializationOptions(
+            initialization_options(
                 server_name="aegisflow-ehs",
                 server_version="1.0.0",
                 capabilities=server.get_capabilities(
